@@ -1,4 +1,4 @@
-# STORE IN/OUT — Attendance System
+# STORE TIME IN/OUT + Attendanc Management System
 
 A biometric attendance system for retail store staff built with Laravel, Inertia.js, and Vue 3. Employees clock in and out using an HFSecurity HF4000 fingerprint scanner at a dedicated kiosk terminal. Admins manage employees, monitor attendance, and export logs through a separate admin panel.
 
@@ -35,15 +35,21 @@ resources/js/
     AdminLayout.vue                 -- Sidebar + topbar shell for all admin pages
   Pages/
     Admin/
-      Dashboard.vue                 -- Admin dashboard
       Employees/
         Index.vue                   -- Employee list, create/edit modal, enroll modal
-        Form.vue                    -- Standalone employee create/edit page (unused if modal only)
-        Enroll.vue                  -- Standalone fingerprint enrollment page
         EmployeeLogs.vue            -- Per-employee attendance history page
       Logs/
-        Index.vue (LogsIndex.vue)   -- Daily attendance log table
-    Kiosk.vue                       -- Public kiosk terminal UI
+        Index.vue                   -- Daily attendance log table
+      Dashboard.vue                 -- Admin dashboard
+    Auth/
+      (Laravel Breeze auth pages — login, register, etc.)
+    Kiosk/
+      Index.vue                     -- Public kiosk terminal UI
+
+public/
+  js/
+    process.js                      -- HFSecurity HF4000 scanner SDK (provided by manufacturer)
+    jquery.min.js                   -- Required dependency of process.js
 
 routes/
   web.php                           -- All application routes
@@ -351,7 +357,19 @@ Password: admin1234
 
 ## HF4000 Scanner Integration
 
-The HF4000 communicates over a local WebSocket server at `ws://127.0.0.1:21187/fps` using a proprietary message protocol. The scanner SDK (process.js) must be running on the kiosk machine.
+### Initial Setup
+
+Before the scanner can communicate with the web application, the HF4000 SDK must be installed on the kiosk machine:
+
+1. Run `setup.exe` from the HF4000 SDK package. This installs the necessary drivers and starts the local WebSocket server that the browser communicates with.
+2. Once installed, verify the scanner is working by opening the manufacturer's default HTML demo app included in the SDK. Test a fingerprint capture there first before using the application — this confirms the scanner is properly detected, the WebSocket server is running, and the device is functional.
+3. The WebSocket server must be running in the background whenever the kiosk is in use. If the kiosk shows "Disconnected", check that the SDK service is active on the machine.
+
+### How It Works
+
+The HF4000 communicates over a local WebSocket server at `ws://127.0.0.1:21187/fps` using a proprietary message protocol. The scanner SDK (`public/js/process.js`, provided by the manufacturer) must be loaded on the kiosk page alongside its jQuery dependency.
+
+The Vue kiosk component does not open its own WebSocket connection. Instead it hooks into the existing `window.ws` instance created by `process.js` via `hookProcessJs()`, which intercepts `window.ws.onmessage` to handle scanner events within Vue's reactive state.
 
 ### WebSocket Message Types (`workmsg`)
 
