@@ -1,4 +1,4 @@
-# STORE TIME IN/OUT + Attendanc Management System
+# STORE TIME IN/OUT + Attendance Management System
 
 A biometric attendance system for retail store staff built with Laravel, Inertia.js, and Vue 3. Employees clock in and out using an HFSecurity HF4000 fingerprint scanner at a dedicated kiosk terminal. Admins manage employees, monitor attendance, and export logs through a separate admin panel.
 
