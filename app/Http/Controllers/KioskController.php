@@ -157,6 +157,66 @@ class KioskController extends Controller
         return response()->json(['logs' => $entries]);
     }
 
+    public function searchEmployees(Request $request)
+    {
+        $q = trim($request->q ?? '');
+        if (strlen($q) < 2) return response()->json(['employees' => []]);
+
+        $employees = Employee::where('full_name', 'like', "%{$q}%")
+            ->orWhere('id_num', 'like', "%{$q}%")
+            ->limit(6)
+            ->get(['id', 'id_num', 'full_name', 'position', 'store_dept'])
+            ->map(fn($e) => [
+                'id'         => $e->id,
+                'id_num'     => $e->id_num,
+                'full_name'  => $e->full_name,
+                'position'   => $e->position,
+                'store_dept' => $e->store_dept,
+            ]);
+
+        return response()->json(['employees' => $employees]);
+    }
+
+    public function employeeLogs(Request $request, Employee $employee)
+    {
+        $query = AttendanceLog::where('id_num', $employee->id_num);
+
+        if ($request->from)   $query->whereDate('date_today', '>=', Carbon::parse($request->from));
+        if ($request->to)     $query->whereDate('date_today', '<=', Carbon::parse($request->to));
+        if ($request->status) $query->where('status', $request->status);
+
+        $paginated = $query->orderBy('date_today', 'desc')->paginate(8);
+
+        $logs = $paginated->getCollection()->map(fn($log) => [
+            'id'         => $log->id,
+            'date_label' => $log->date_today->format('D, M j Y'),
+            'status'     => $log->status,
+            'time_in'    => $log->time_in?->setTimezone(config('app.timezone'))->format('g:i A'),
+            'time_out'   => $log->time_out?->setTimezone(config('app.timezone'))->format('g:i A'),
+            'break1_out' => $log->break1_out?->setTimezone(config('app.timezone'))->format('g:i A'),
+            'break1_in'  => $log->break1_in?->setTimezone(config('app.timezone'))->format('g:i A'),
+            'break2_out' => $log->break2_out?->setTimezone(config('app.timezone'))->format('g:i A'),
+            'break2_in'  => $log->break2_in?->setTimezone(config('app.timezone'))->format('g:i A'),
+            'break3_out' => $log->break3_out?->setTimezone(config('app.timezone'))->format('g:i A'),
+            'break3_in'  => $log->break3_in?->setTimezone(config('app.timezone'))->format('g:i A'),
+        ]);
+
+        $allLogs = AttendanceLog::where('id_num', $employee->id_num)->get();
+        $summary = [
+            'total'   => $allLogs->count(),
+            'present' => $allLogs->where('status', 'present')->count(),
+            'late'    => $allLogs->where('status', 'late')->count(),
+            'absent'  => $allLogs->where('status', 'absent')->count(),
+        ];
+
+        return response()->json([
+            'logs'      => $logs,
+            'summary'   => $summary,
+            'last_page' => $paginated->lastPage(),
+            'total'     => $paginated->total(),
+        ]);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────
 
     private function blocked(Employee $employee, AttendanceLog $log, string $message)

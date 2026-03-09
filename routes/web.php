@@ -41,6 +41,8 @@ require __DIR__.'/auth.php';
 Route::get('/kiosk', [KioskController::class, 'index'])->name('kiosk.index');
 Route::get('/kiosk/templates', [KioskController::class, 'templates'])->name('kiosk.templates');
 Route::get('/kiosk/today-logs', [KioskController::class, 'todayLogs'])->name('kiosk.today-logs');
+Route::get('/kiosk/employees/search', [KioskController::class, 'searchEmployees'])->name('kiosk.employees.search');
+Route::get('/kiosk/employees/{employee}/logs', [KioskController::class, 'employeeLogs'])->name('kiosk.employees.logs');
 Route::post('/kiosk/log', [KioskController::class, 'log'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
     ->name('kiosk.log');

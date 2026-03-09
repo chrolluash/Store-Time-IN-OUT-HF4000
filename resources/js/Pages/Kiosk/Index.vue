@@ -70,82 +70,13 @@
 
       <!-- Action selection -->
       <div class="step-section" v-if="step === 'select'">
-        <div class="step-label">Select your action</div>
-        <div class="kiosk-grid">
+        <div class="select-label">Select Action</div>
+        <div class="kiosk-top-grid">
 
-          <!-- Left: Today's Logs -->
-          <div class="logs-card">
-            <div class="logs-card-header">
-              <div class="logs-card-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-                Today's Logs
-              </div>
-              <div class="logs-count">{{ filteredLogs.length }}</div>
-            </div>
-            <div class="logs-filters">
-              <div class="logs-search-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input v-model="logSearch" type="text" placeholder="Search name..." class="logs-search" />
-              </div>
-              <select v-model="logActionFilter" class="logs-filter-select">
-                <option value="">All Actions</option>
-                <option value="time_in">Time In</option>
-                <option value="time_out">Time Out</option>
-                <option value="break1_out">Break 1 Out</option>
-                <option value="break1_in">Break 1 In</option>
-                <option value="break2_out">Break 2 Out</option>
-                <option value="break2_in">Break 2 In</option>
-                <option value="break3_out">Break 3 Out</option>
-                <option value="break3_in">Break 3 In</option>
-              </select>
-              <select v-model="logPositionFilter" class="logs-filter-select">
-                <option value="">All Positions</option>
-                <option value="Store Head">Store Head</option>
-                <option value="Store Manager">Store Manager</option>
-                <option value="Cashier">Cashier</option>
-                <option value="Sales Personnel">Sales Personnel</option>
-              </select>
-              <select v-model="logStoreFilter" class="logs-filter-select">
-                <option value="">All Stores</option>
-                <option value="SM MOA">SM MOA</option>
-                <option value="SM Megamall">SM Megamall</option>
-                <option value="SM North EDSA">SM North EDSA</option>
-                <option value="Glorietta">Glorietta</option>
-                <option value="Robinsons Manila">Robinsons Manila</option>
-                <option value="SM Grand Central">SM Grand Central</option>
-                <option value="SM Fairview">SM Fairview</option>
-                <option value="SM Southmall">SM Southmall</option>
-                <option value="ATC">ATC</option>
-                <option value="Festival Mall">Festival Mall</option>
-                <option value="Ali Mall">Ali Mall</option>
-              </select>
-            </div>
-            <div class="logs-list" ref="logsListRef">
-              <div v-if="filteredLogs.length === 0" class="logs-empty">No logs yet today</div>
-              <transition-group name="log-slide" tag="div">
-                <div v-for="entry in paginatedLogs" :key="entry.id" class="log-entry">
-                  <div class="log-avatar">{{ entry.full_name?.charAt(0) }}</div>
-                  <div class="log-info">
-                    <div class="log-name">{{ entry.full_name }}</div>
-                    <div class="log-meta">{{ entry.position }} · {{ entry.store_dept }}</div>
-                    <div class="log-time">{{ entry.time }}</div>
-                  </div>
-                  <div class="log-action-pill" :class="entry.action">{{ actionLabel(entry.action) }}</div>
-                </div>
-              </transition-group>
-            </div>
-            <div class="logs-pagination" v-if="totalPages > 1">
-              <button class="page-btn" @click="logsPage--" :disabled="logsPage === 1">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-              </button>
-              <span class="page-info">{{ logsPage }} / {{ totalPages }}</span>
-              <button class="page-btn" @click="logsPage++" :disabled="logsPage === totalPages">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-            </div>
-          </div>
+          <!-- Left placeholder hidden -->
+          <div class="logs-card logs-card--hidden"></div>
 
-          <!-- Center: Actions + Breaks -->
+          <!-- Center: Actions + Breaks + Today's Logs -->
           <div class="center-col">
 
             <!-- Time In / Out -->
@@ -180,51 +111,253 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 8h1a4 4 0 010 8h-1"/><path d="M3 8h14v9a4 4 0 01-4 4H7a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
                 Breaks
               </div>
-              <div class="breaks-grid">
-                <button v-for="b in breaks.slice(0,3)" :key="b.action"
-                  class="break-btn"
-                  :class="[b.cls, { locked: isLocked(b.action) }]"
-                  :disabled="isLocked(b.action)"
-                  @click="openScanModal(b.action)">
+
+              <!-- Row 1: All Outs -->
+              <div class="breaks-flat-row">
+                <button v-for="n in 3" :key="'out'+n"
+                  class="break-btn break-out"
+                  :class="{ locked: isLocked(breaks[(n-1)*2].action) }"
+                  :disabled="isLocked(breaks[(n-1)*2].action)"
+                  @click="openScanModal(breaks[(n-1)*2].action)">
                   <div class="break-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 8h1a4 4 0 010 8h-1"/><path d="M3 8h14v9a4 4 0 01-4 4H7a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
                   </div>
-                  <span class="break-name">{{ b.label }}</span>
+                  <span class="break-name">{{ breaks[(n-1)*2].label }}</span>
                 </button>
               </div>
-              <div class="breaks-divider"><span>Back from break</span></div>
-              <div class="breaks-grid">
-                <button v-for="b in breaks.slice(3)" :key="b.action"
-                  class="break-btn"
-                  :class="[b.cls, { locked: isLocked(b.action) }]"
-                  :disabled="isLocked(b.action)"
-                  @click="openScanModal(b.action)">
+
+              <!-- Divider -->
+              <div class="breaks-row-divider"><span>Back from Break</span></div>
+
+              <!-- Row 2: All Ins -->
+              <div class="breaks-flat-row">
+                <button v-for="n in 3" :key="'in'+n"
+                  class="break-btn break-in"
+                  :class="{ locked: isLocked(breaks[(n-1)*2+1].action) }"
+                  :disabled="isLocked(breaks[(n-1)*2+1].action)"
+                  @click="openScanModal(breaks[(n-1)*2+1].action)">
                   <div class="break-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 8h1a4 4 0 010 8h-1"/><path d="M3 8h14v9a4 4 0 01-4 4H7a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
                   </div>
-                  <span class="break-name">{{ b.label }}</span>
+                  <span class="break-name">{{ breaks[(n-1)*2+1].label }}</span>
                 </button>
               </div>
             </div>
 
-            <!-- Terminal -->
-            <div class="terminal">
-              <div class="terminal-bar">
-                <span class="t-dot red"></span><span class="t-dot yellow"></span><span class="t-dot green"></span>
-                <span class="t-title">Scanner Status</span>
-                <div class="t-conn" :class="connected ? 'online' : 'offline'">
-                  <span class="t-conn-dot"></span>{{ connected ? 'Connected' : 'Disconnected' }}
+            <!-- ✅ TODAY'S LOGS — now inside center-col to match action card width -->
+            <div class="logs-bottom">
+              <div class="logs-bottom-header">
+                <div class="logs-card-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+                  Today's Logs
                 </div>
-                <button v-if="!connected" class="t-conn-btn" @click="connectScanner">Connect</button>
-                <button v-else class="t-conn-btn disconnect" @click="disconnectScanner">Disconnect</button>
-                <button class="t-clear" @click="statusLog = ''">Clear</button>
+                <div class="logs-count">{{ filteredLogs.length }}</div>
+                <div class="logs-bottom-filters">
+                  <div class="logs-search-wrap logs-search-wrap--inline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input v-model="logSearch" type="text" placeholder="Search name or ID..." class="logs-search" />
+                  </div>
+                  <select v-model="logActionFilter" class="logs-filter-select">
+                    <option value="">All Actions</option>
+                    <option value="time_in">Time In</option>
+                    <option value="time_out">Time Out</option>
+                    <option value="break1_out">B1 Out</option>
+                    <option value="break1_in">B1 In</option>
+                    <option value="break2_out">B2 Out</option>
+                    <option value="break2_in">B2 In</option>
+                    <option value="break3_out">B3 Out</option>
+                    <option value="break3_in">B3 In</option>
+                  </select>
+                  <select v-model="logPositionFilter" class="logs-filter-select">
+                    <option value="">All Positions</option>
+                    <option value="Store Head">Store Head</option>
+                    <option value="Store Manager">Store Manager</option>
+                    <option value="Cashier">Cashier</option>
+                    <option value="Sales Personnel">Sales Personnel</option>
+                  </select>
+                  <select v-model="logStoreFilter" class="logs-filter-select">
+                    <option value="">All Stores</option>
+                    <option value="SM MOA">SM MOA</option>
+                    <option value="SM Megamall">SM Megamall</option>
+                    <option value="SM North EDSA">SM North EDSA</option>
+                    <option value="Glorietta">Glorietta</option>
+                    <option value="Robinsons Manila">Robinsons Manila</option>
+                    <option value="SM Grand Central">SM Grand Central</option>
+                    <option value="SM Fairview">SM Fairview</option>
+                    <option value="SM Southmall">SM Southmall</option>
+                    <option value="ATC">ATC</option>
+                    <option value="Festival Mall">Festival Mall</option>
+                    <option value="Ali Mall">Ali Mall</option>
+                  </select>
+                </div>
               </div>
-              <div class="terminal-body" ref="logWrap"><pre>{{ statusLog }}</pre></div>
+              <div class="logs-bottom-list" ref="logsListRef">
+                <div v-if="filteredLogs.length === 0" class="logs-empty-inline">No logs yet today</div>
+                <transition-group name="log-slide" tag="div" class="logs-inline-entries">
+                  <div v-for="entry in paginatedLogs" :key="entry.id" class="log-entry">
+                    <div class="log-avatar">{{ entry.full_name?.charAt(0) }}</div>
+                    <div class="log-info">
+                      <div class="log-name">{{ entry.full_name }}</div>
+                      <div class="log-meta">{{ entry.position }} · {{ entry.store_dept }}</div>
+                      <div class="log-time">{{ entry.time }}</div>
+                    </div>
+                    <div class="log-action-pill" :class="entry.action">{{ actionLabel(entry.action) }}</div>
+                  </div>
+                </transition-group>
+              </div>
+              <div class="logs-bottom-pagination" v-if="totalPages > 1">
+                <button class="page-btn" @click="logsPage--" :disabled="logsPage === 1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <span class="page-info">{{ logsPage }} / {{ totalPages }}</span>
+                <button class="page-btn" @click="logsPage++" :disabled="logsPage === totalPages">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
             </div>
-          </div>
 
-        </div>
-      </div>
+          </div> <!-- end center-col -->
+
+          <!-- Right: Terminal mini card + My Logs -->
+          <div class="right-col">
+
+            <!-- Terminal mini card -->
+            <div class="terminal-mini">
+              <div class="terminal-mini-bar">
+                <div class="t-bar-top">
+                  <span class="t-dot red"></span><span class="t-dot yellow"></span><span class="t-dot green"></span>
+                  <span class="t-title">Scanner Status</span>
+                </div>
+                <div class="t-bar-bottom">
+                  <div class="t-conn" :class="connected ? 'online' : 'offline'">
+                    <span class="t-conn-dot"></span>{{ connected ? 'Connected' : 'Disconnected' }}
+                  </div>
+                  <div class="t-bar-actions">
+                    <button class="t-toggle" :class="{ active: connected }" @click="connected ? disconnectScanner() : connectScanner()" :title="connected ? 'Disconnect' : 'Connect'">
+                      <span class="t-toggle-thumb"></span>
+                    </button>
+                    <button class="t-clear" @click="statusLog = ''">Clear</button>
+                  </div>
+                </div>
+              </div>
+              <div class="terminal-mini-body" ref="logWrap">
+                <pre>{{ statusLog }}</pre>
+              </div>
+            </div>
+
+            <!-- My Logs -->
+            <div class="mylogs-card">
+              <div class="mylogs-header">
+                <div class="mylogs-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                  My Logs
+                </div>
+              </div>
+
+              <!-- Search state -->
+              <div class="mylogs-search-wrap" v-if="!myLogsEmployee">
+                <div class="mylogs-search-input-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input v-model="myLogsSearch" type="text" placeholder="Search name or ID..." class="mylogs-search" @input="searchEmployees" />
+                </div>
+                <div class="mylogs-suggestions" v-if="myLogsSuggestions.length">
+                  <div v-for="emp in myLogsSuggestions" :key="emp.id" class="mylogs-suggestion" @click="selectEmployee(emp)">
+                    <div class="suggestion-avatar">{{ emp.full_name.charAt(0) }}</div>
+                    <div class="suggestion-info">
+                      <div class="suggestion-name">{{ emp.full_name }}</div>
+                      <div class="suggestion-meta">{{ emp.id_num }} · {{ emp.store_dept }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mylogs-hint" v-if="myLogsSearch.length > 0 && myLogsSuggestions.length === 0 && !myLogsSearching">No employees found.</div>
+                <div class="mylogs-hint" v-if="myLogsSearch.length === 0">Type your name or ID to view your attendance history.</div>
+              </div>
+
+              <!-- Employee found -->
+              <template v-if="myLogsEmployee">
+
+                <!-- Employee header -->
+                <div class="mylogs-emp-header">
+                  <div class="mylogs-emp-avatar">{{ myLogsEmployee.full_name.charAt(0) }}</div>
+                  <div class="mylogs-emp-info">
+                    <div class="mylogs-emp-name">{{ myLogsEmployee.full_name }}</div>
+                    <div class="mylogs-emp-meta">{{ myLogsEmployee.store_dept }}</div>
+                  </div>
+                  <button class="mylogs-clear-btn" @click="clearMyLogs" title="Search again">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+
+                <!-- Stats row — simple pills -->
+                <div class="mylogs-stats-row">
+                  <div class="ml-stat-pill total">{{ myLogsSummary.total }} <span>Total</span></div>
+                  <div class="ml-stat-pill present">{{ myLogsSummary.present }} <span>Present</span></div>
+                  <div class="ml-stat-pill late">{{ myLogsSummary.late }} <span>Late</span></div>
+                  <div class="ml-stat-pill absent">{{ myLogsSummary.absent }} <span>Absent</span></div>
+                </div>
+
+                <!-- Simple date filter -->
+                <div class="mylogs-simple-filter">
+                  <div class="mylogs-filter-row" style="width:100%;display:flex;gap:6px;align-items:center;">
+                    <input type="date" v-model="myLogsFrom" @change="applyMyLogsFilters" class="mylogs-date-input" title="From" />
+                    <span class="mylogs-date-sep">→</span>
+                    <input type="date" v-model="myLogsTo" @change="applyMyLogsFilters" class="mylogs-date-input" title="To" />
+                  </div>
+                  <div class="mylogs-filter-row" style="width:100%;display:flex;gap:6px;align-items:center;margin-top:6px;">
+                    <select v-model="myLogsStatus" @change="applyMyLogsFilters" class="mylogs-select">
+                      <option value="">All Statuses</option>
+                      <option value="present">Present</option>
+                      <option value="late">Late</option>
+                      <option value="absent">Absent</option>
+                    </select>
+                    <button v-if="myLogsFrom || myLogsTo || myLogsStatus" class="mylogs-clear-filter" @click="clearMyLogsFilters">Clear</button>
+                  </div>
+                </div>
+
+                <!-- Log list -->
+                <div class="mylogs-list">
+                  <div v-if="myLogsLoading" class="mylogs-loading">Loading...</div>
+                  <div v-else-if="myLogsData.length === 0" class="mylogs-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+                    No logs found.
+                  </div>
+                  <div v-else>
+                    <div v-for="log in myLogsData" :key="log.id" class="mylogs-entry">
+                      <div class="mylogs-entry-top">
+                        <span class="mylogs-date">{{ log.date_label }}</span>
+                        <span class="mylogs-status-pill" :class="log.status">{{ log.status }}</span>
+                      </div>
+                      <div class="mylogs-times">
+                        <span class="mlt in">IN {{ log.time_in || '—' }}</span>
+                        <span class="mlt out">OUT {{ log.time_out || '—' }}</span>
+                      </div>
+                      <div class="mylogs-breaks" v-if="log.break1_out || log.break2_out || log.break3_out">
+                        <template v-for="n in 3" :key="n">
+                          <span v-if="log[`break${n}_out`]" class="mlt-break">
+                            B{{ n }}: {{ log[`break${n}_out`] }} – {{ log[`break${n}_in`] || '...' }}
+                          </span>
+                        </template>
+                      </div>
+                    </div>
+                    <div class="mylogs-pagination" v-if="myLogsTotalPages > 1">
+                      <button class="page-btn" @click="myLogsPage--; fetchMyLogs()" :disabled="myLogsPage === 1">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                      </button>
+                      <span class="page-info">{{ myLogsPage }} / {{ myLogsTotalPages }}</span>
+                      <button class="page-btn" @click="myLogsPage++; fetchMyLogs()" :disabled="myLogsPage === myLogsTotalPages">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+          </div> <!-- end right-col -->
+
+        </div> <!-- end kiosk-top-grid -->
+
+      </div> <!-- end step-section -->
     </main>
 
     <!-- Scan Modal -->
@@ -335,10 +468,10 @@ function updateClock() {
 
 const breaks = [
   { action: 'break1_out', label: 'Break 1 Out', cls: 'break-out' },
-  { action: 'break2_out', label: 'Break 2 Out', cls: 'break-out' },
-  { action: 'break3_out', label: 'Break 3 Out', cls: 'break-out' },
   { action: 'break1_in',  label: 'Break 1 In',  cls: 'break-in'  },
+  { action: 'break2_out', label: 'Break 2 Out', cls: 'break-out' },
   { action: 'break2_in',  label: 'Break 2 In',  cls: 'break-in'  },
+  { action: 'break3_out', label: 'Break 3 Out', cls: 'break-out' },
   { action: 'break3_in',  label: 'Break 3 In',  cls: 'break-in'  },
 ]
 
@@ -364,6 +497,7 @@ const logWrap       = ref(null)
 const modalLogWrap  = ref(null)
 
 const scanModal      = ref({ open: false, action: null })
+const terminalOpen   = ref(false)
 const step           = ref('select')
 const result         = ref(null)
 const resetCountdown = ref(3)
@@ -393,7 +527,7 @@ const filteredLogs = computed(() => {
 })
 
 const logsPage    = ref(1)
-const logsPerPage = 8
+const logsPerPage = 5
 const totalPages  = computed(() => Math.max(1, Math.ceil(filteredLogs.value.length / logsPerPage)))
 const paginatedLogs = computed(() => {
   const start = (logsPage.value - 1) * logsPerPage
@@ -648,6 +782,79 @@ function disconnectScanner() {
   else window.ws?.close()
 }
 
+// ── My Logs ─────────────────────────────────────────────────────────────────
+const myLogsSearch      = ref('')
+const myLogsSuggestions = ref([])
+const myLogsSearching   = ref(false)
+const myLogsEmployee    = ref(null)
+const myLogsData        = ref([])
+const myLogsSummary     = ref({ total: 0, present: 0, late: 0, absent: 0 })
+const myLogsLoading     = ref(false)
+const myLogsFrom        = ref('')
+const myLogsTo          = ref('')
+const myLogsStatus      = ref('')
+const myLogsPage        = ref(1)
+const myLogsTotalPages  = ref(1)
+
+let myLogsSearchTimer = null
+function searchEmployees() {
+  myLogsSuggestions.value = []
+  clearTimeout(myLogsSearchTimer)
+  const q = myLogsSearch.value.trim()
+  if (q.length < 2) return
+  myLogsSearchTimer = setTimeout(async () => {
+    myLogsSearching.value = true
+    try {
+      const res = await axios.get('/kiosk/employees/search', { params: { q } })
+      myLogsSuggestions.value = res.data.employees
+    } catch (e) {}
+    myLogsSearching.value = false
+  }, 300)
+}
+
+async function selectEmployee(emp) {
+  myLogsEmployee.value    = emp
+  myLogsSearch.value      = ''
+  myLogsSuggestions.value = []
+  myLogsPage.value        = 1
+  myLogsFrom.value        = ''
+  myLogsTo.value          = ''
+  myLogsStatus.value      = ''
+  await fetchMyLogs()
+}
+
+async function fetchMyLogs() {
+  if (!myLogsEmployee.value) return
+  myLogsLoading.value = true
+  try {
+    const res = await axios.get(`/kiosk/employees/${myLogsEmployee.value.id}/logs`, {
+      params: {
+        from:   myLogsFrom.value   || undefined,
+        to:     myLogsTo.value     || undefined,
+        status: myLogsStatus.value || undefined,
+        page:   myLogsPage.value,
+      }
+    })
+    myLogsData.value       = res.data.logs
+    myLogsSummary.value    = res.data.summary
+    myLogsTotalPages.value = res.data.last_page
+  } catch (e) {}
+  myLogsLoading.value = false
+}
+
+function applyMyLogsFilters() { myLogsPage.value = 1; fetchMyLogs() }
+
+function clearMyLogsFilters() {
+  myLogsFrom.value = ''; myLogsTo.value = ''; myLogsStatus.value = ''
+  myLogsPage.value = 1; fetchMyLogs()
+}
+
+function clearMyLogs() {
+  myLogsEmployee.value = null; myLogsSearch.value = ''; myLogsSuggestions.value = []
+  myLogsData.value = []; myLogsSummary.value = { total: 0, present: 0, late: 0, absent: 0 }
+  myLogsFrom.value = ''; myLogsTo.value = ''; myLogsStatus.value = ''
+}
+
 let logsTimer = null
 onMounted(() => {
   updateClock()
@@ -677,16 +884,23 @@ onUnmounted(() => {
 .clock-time { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: #fff; letter-spacing: 2px; }
 .clock-date { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px; text-align: right; }
 
-.kiosk-main { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 16px 28px; overflow-y: auto; min-height: 0; }
-.step-section { width: 100%; max-width: 1200px; padding-bottom: 8px; }
-.step-label { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; }
+.kiosk-main { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 16px 20px; overflow-y: auto; min-height: 0; }
+.step-section { width: 100%; max-width: 1100px; padding-bottom: 8px; }
 
-.kiosk-grid { display: grid; grid-template-columns: 320px 1fr; gap: 14px; width: 100%; align-items: stretch; }
+/* ── Select Action label ── */
+.select-label { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+
+/* ── Top grid: center (actions+breaks+logs) + right (terminal+mylogs) ── */
+.kiosk-top-grid { display: grid; grid-template-columns: 1fr 280px; gap: 12px; width: 100%; align-items: stretch; }
+.logs-card--hidden { display: none; }
+
+/* ── Center column — actions, breaks, AND today's logs ── */
 .center-col { display: flex; flex-direction: column; gap: 10px; }
 
+/* ── Action buttons ── */
 .action-outer { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 .main-actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.action-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 10px; border-radius: 12px; border: 2px solid #f1f5f9; background: #fafafa; cursor: pointer; transition: all 0.18s; font-family: 'Sora', sans-serif; }
+.action-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px 10px; border-radius: 12px; border: 2px solid #f1f5f9; background: #fafafa; cursor: pointer; transition: all 0.18s; font-family: 'Sora', sans-serif; width: 100%; }
 .action-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
 .action-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
 .action-icon svg { width: 24px; height: 24px; }
@@ -697,78 +911,94 @@ onUnmounted(() => {
 .action-btn.time-out .action-icon { background: #fee2e2; color: #dc2626; }
 .action-btn.time-out:hover:not(:disabled) { border-color: #dc2626; }
 
+/* ── Breaks ── */
 .breaks-outer { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-.breaks-section-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.breaks-section-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
 .breaks-section-label svg { width: 13px; height: 13px; }
-.breaks-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.breaks-divider { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
-.breaks-divider::before, .breaks-divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
-.breaks-divider span { font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
-.break-btn { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 18px 6px; border-radius: 11px; border: 1.5px solid #f1f5f9; background: #fafafa; cursor: pointer; transition: all 0.18s; font-family: 'Sora', sans-serif; }
-.break-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.07); }
-.break-icon { width: 40px; height: 40px; border-radius: 9px; display: flex; align-items: center; justify-content: center; }
-.break-icon svg { width: 18px; height: 18px; }
-.break-name { font-size: 11px; font-weight: 700; color: #1a1a1a; text-align: center; white-space: nowrap; }
+.breaks-flat-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.breaks-row-divider { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+.breaks-row-divider::before, .breaks-row-divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+.breaks-row-divider span { font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+.break-btn { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 14px 6px; border-radius: 11px; border: 1.5px solid #f1f5f9; background: #fafafa; cursor: pointer; transition: all 0.18s; font-family: 'Sora', sans-serif; width: 100%; }
+.break-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.07); }
+.break-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; }
+.break-icon svg { width: 16px; height: 16px; }
+.break-name { font-size: 10px; font-weight: 700; color: #1a1a1a; text-align: center; }
 .break-btn.break-out .break-icon { background: #fef9c3; color: #ca8a04; }
-.break-btn.break-out:hover:not(:disabled) { border-color: #ca8a04; }
+.break-btn.break-out:hover:not(:disabled) { border-color: #ca8a04; background: #fefce8; }
 .break-btn.break-in  .break-icon { background: #dbeafe; color: #2563eb; }
-.break-btn.break-in:hover:not(:disabled)  { border-color: #2563eb; }
+.break-btn.break-in:hover:not(:disabled)  { border-color: #2563eb; background: #eff6ff; }
 
-.action-btn.locked, .break-btn.locked { opacity: 0.3; cursor: not-allowed; filter: grayscale(0.6); }
+.action-btn.locked, .break-btn.locked { opacity: 0.28; cursor: not-allowed; filter: grayscale(0.5); }
 .action-btn.locked:hover, .break-btn.locked:hover { transform: none !important; box-shadow: none !important; }
 
-.logs-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 16px rgba(0,0,0,0.06); max-height: 620px; height: 100%; }
-.logs-card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
-.logs-card-title { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; }
-.logs-card-title svg { width: 14px; height: 14px; color: #8C1007; }
-.logs-count { font-size: 11px; font-weight: 700; background: #fde8e9; color: #8C1007; padding: 2px 8px; border-radius: 20px; }
-.logs-filters { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 7px; flex-shrink: 0; }
-.logs-search-wrap { position: relative; }
-.logs-search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; color: #9ca3af; }
-.logs-search { width: 100%; background: #f9fafb; border: 1px solid #e2e8f0; border-radius: 7px; padding: 6px 8px 6px 28px; font-size: 11px; font-family: inherit; color: #1a1a1a; outline: none; }
-.logs-search:focus { border-color: #8C1007; }
-.logs-filter-select { width: 100%; background: #f9fafb; border: 1px solid #e2e8f0; border-radius: 7px; padding: 6px 28px 6px 8px; font-size: 11px; font-family: inherit; color: #1a1a1a; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 13px; background-color: #f9fafb; }
+/* ── Today's Logs — now inside center-col, matches action card width ── */
+.logs-bottom { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden; }
+.logs-bottom-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; }
+.logs-bottom-filters { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.logs-search-wrap--inline { position: relative; }
+.logs-search-wrap--inline svg { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; color: #9ca3af; }
+.logs-search-wrap--inline .logs-search { width: 160px; padding: 5px 6px 5px 24px; }
+.logs-bottom-list { overflow: hidden; width: 100%; }
+.logs-inline-entries { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); }
+.logs-empty-inline { text-align: center; color: #9ca3af; font-size: 12px; padding: 20px 24px; }
+.logs-bottom-pagination { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 7px 14px; border-top: 1px solid #f1f5f9; }
+
+/* ── Shared log card styles ── */
+.logs-card-title { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; }
+.logs-card-title svg { width: 13px; height: 13px; color: #8C1007; }
+.logs-count { font-size: 11px; font-weight: 700; background: #fde8e9; color: #8C1007; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+.logs-filter-select { background: #f9fafb; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 22px 5px 8px; font-size: 10px; font-family: inherit; color: #1a1a1a; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 5px center; background-size: 11px; background-color: #f9fafb; }
 .logs-filter-select:focus { border-color: #8C1007; }
-.logs-list { flex: 1; overflow-y: auto; padding: 6px 0; min-height: 0; }
-.logs-empty { text-align: center; color: #9ca3af; font-size: 12px; padding: 32px 16px; }
-.log-entry { display: flex; align-items: center; gap: 10px; padding: 9px 14px; transition: background 0.15s; }
+.logs-search { background: #f9fafb; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 11px; font-family: inherit; color: #1a1a1a; outline: none; }
+.logs-search:focus { border-color: #8C1007; }
+.log-entry { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; min-width: 0; transition: background 0.15s; }
 .log-entry:hover { background: #fafafa; }
-.log-avatar { width: 30px; height: 30px; border-radius: 50%; background: #3E0703; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.log-entry:last-child { border-right: none; }
+.log-avatar { width: 28px; height: 28px; border-radius: 50%; background: #3E0703; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
 .log-info { flex: 1; min-width: 0; }
-.log-name { font-size: 12px; font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.log-meta { font-size: 10px; color: #6b7280; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.log-time { font-size: 10px; color: #9ca3af; font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
-.log-action-pill { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; flex-shrink: 0; white-space: nowrap; }
+.log-name { font-size: 11px; font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log-meta { font-size: 9px; color: #6b7280; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log-time { font-size: 9px; color: #9ca3af; font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
+.log-action-pill { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 10px; white-space: nowrap; align-self: flex-start; }
 .log-action-pill.time_in    { background: #dcfce7; color: #16a34a; }
 .log-action-pill.time_out   { background: #fee2e2; color: #dc2626; }
 .log-action-pill.break1_out,.log-action-pill.break2_out,.log-action-pill.break3_out { background: #fef9c3; color: #ca8a04; }
 .log-action-pill.break1_in,.log-action-pill.break2_in,.log-action-pill.break3_in   { background: #dbeafe; color: #2563eb; }
-
-.logs-pagination { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 14px; border-top: 1px solid #f1f5f9; flex-shrink: 0; }
-.page-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+.page-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
 .page-btn:hover:not(:disabled) { background: #fde8e9; border-color: #8C1007; }
 .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.page-btn svg { width: 13px; height: 13px; color: #374151; }
+.page-btn svg { width: 12px; height: 12px; color: #374151; }
 .page-info { font-size: 11px; font-weight: 600; color: #6b7280; font-family: 'JetBrains Mono', monospace; }
 
-.terminal { background: #0f0f0f; border-radius: 10px; overflow: hidden; border: 1px solid #1e1e1e; display: flex; flex-direction: column; height: 180px; }
-.terminal-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #1a1a1a; border-bottom: 1px solid #2a2a2a; flex-shrink: 0; }
-.t-dot { width: 10px; height: 10px; border-radius: 50%; }
+/* ── Right column ── */
+.right-col { display: flex; flex-direction: column; gap: 10px; overflow: visible; align-self: stretch; }
+
+/* ── Terminal mini card ── */
+.terminal-mini { background: #0f0f0f; border-radius: 14px; overflow: hidden; border: 1px solid #1e1e1e; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; max-height: 200px; }
+.terminal-mini-bar { display: flex; flex-direction: column; gap: 5px; padding: 8px 12px; background: #1a1a1a; border-bottom: 1px solid #2a2a2a; flex-shrink: 0; }
+.t-bar-top { display: flex; align-items: center; gap: 5px; }
+.t-bar-bottom { display: flex; align-items: center; justify-content: space-between; }
+.t-bar-actions { display: flex; align-items: center; gap: 6px; }
+.t-title { font-size: 10px; color: #555; font-family: 'JetBrains Mono', monospace; margin-left: 2px; }
+.t-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .t-dot.red { background: #ff5f57; } .t-dot.yellow { background: #febc2e; } .t-dot.green { background: #28c840; }
-.t-title { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; margin-left: 4px; flex: 1; }
-.t-conn { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; font-family: 'JetBrains Mono', monospace; padding: 3px 8px; margin-right: 4px; }
+.t-conn { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
 .t-conn.online { color: #28c840; } .t-conn.offline { color: #f87171; }
 .t-conn-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .t-conn.online .t-conn-dot { background: #28c840; animation: blink 2s infinite; }
 .t-conn.offline .t-conn-dot { background: #f87171; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.t-conn-btn { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; border: 1px solid #561C24; background: #6D2932; color: #fff; cursor: pointer; font-family: 'JetBrains Mono', monospace; margin-right: 4px; }
-.t-conn-btn.disconnect { border-color: #dc2626; background: transparent; color: #f87171; }
+.t-toggle { position: relative; width: 36px; height: 20px; border-radius: 20px; border: none; cursor: pointer; transition: background 0.25s ease; background: #dc2626; padding: 0; flex-shrink: 0; }
+.t-toggle.active { background: #2563eb; }
+.t-toggle-thumb { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); display: block; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+.t-toggle.active .t-toggle-thumb { transform: translateX(16px); }
 .t-clear { background: none; border: none; color: #555; font-size: 10px; cursor: pointer; font-family: inherit; }
 .t-clear:hover { color: #fff; }
-.terminal-body { padding: 10px 12px; flex: 1; min-height: 0; overflow-y: auto; }
-.terminal-body pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #4ade80; line-height: 1.6; white-space: pre-wrap; }
+.terminal-mini-body { padding: 10px 12px; height: 110px; overflow-y: auto; flex-shrink: 0; }
+.terminal-mini-body pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #4ade80; line-height: 1.6; white-space: pre-wrap; }
 
+/* ── Scan Modal ── */
 .scan-modal-overlay { position: fixed; inset: 0; background: rgba(10,2,4,0.78); display: flex; align-items: center; justify-content: center; z-index: 600; backdrop-filter: blur(6px); padding: 24px; }
 .scan-modal { background: #f8fafc; border-radius: 20px; width: 100%; max-width: 820px; box-shadow: 0 30px 80px rgba(0,0,0,0.45); overflow: hidden; }
 .scan-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 28px; background: #3E0703; }
@@ -781,7 +1011,7 @@ onUnmounted(() => {
 .scan-modal-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
 .scan-modal-close svg { width: 14px; height: 14px; }
 .scan-modal-body { padding: 20px 28px 28px; }
-.scan-modal-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+.scan-modal-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: stretch; }
 .scan-modal-scanner { display: flex; flex-direction: column; gap: 10px; }
 .conn-bar { display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 7px 12px; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; }
 .conn-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
@@ -819,6 +1049,7 @@ onUnmounted(() => {
 .instruct-action-badge.break1_in,.instruct-action-badge.break2_in,.instruct-action-badge.break3_in   { background: #dbeafe; color: #2563eb; }
 .instruct-time { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; color: #3E0703; letter-spacing: 1px; }
 
+/* ── Result overlay ── */
 .result-overlay { position: fixed; inset: 0; background: rgba(8,2,4,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; z-index: 700; backdrop-filter: blur(10px); }
 .result-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; background: #fff; border-radius: 28px; padding: 0 88px 48px; box-shadow: 0 24px 80px rgba(0,0,0,0.5); text-align: center; min-width: 440px; overflow: hidden; animation: card-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
 @keyframes card-pop { 0%{opacity:0;transform:scale(0.88) translateY(16px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
@@ -855,6 +1086,7 @@ onUnmounted(() => {
 .result-dismiss-btn { padding: 7px 22px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45); font-size: 11px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.18s; letter-spacing: 0.5px; }
 .result-dismiss-btn:hover { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.3); }
 
+/* ── Footer ── */
 .kiosk-footer { background: #F4F4F5; border-top: 1px solid #e8e8ea; padding: 10px 40px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .kiosk-footer-left { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #9ca3af; }
 .footer-fp-icon { width: 14px; height: 14px; color: #9ca3af; }
@@ -863,18 +1095,20 @@ onUnmounted(() => {
 .footer-link { color: #8C1007; font-weight: 600; text-decoration: none; }
 .footer-link:hover { text-decoration: underline; }
 
+/* ── Transitions ── */
 .modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
 .modal-fade-enter-from { opacity: 0; transform: scale(0.96) translateY(8px); }
 .modal-fade-leave-to   { opacity: 0; transform: scale(1.02); }
 .result-fade-enter-active { transition: opacity 0.25s ease; }
 .result-fade-leave-active { transition: opacity 0.2s ease; }
 .result-fade-enter-from, .result-fade-leave-to { opacity: 0; }
-.log-slide-enter-active { animation: log-slide-in 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-.log-slide-leave-active { animation: log-slide-out 0.25s cubic-bezier(0.55, 0, 1, 0.45) both; }
-.log-slide-move { transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-@keyframes log-slide-in { 0%{opacity:0;transform:translateX(-24px)} 60%{opacity:1;transform:translateX(4px)} 100%{opacity:1;transform:translateX(0)} }
-@keyframes log-slide-out { 0%{opacity:1;transform:translateX(0)} 100%{opacity:0;transform:translateX(24px)} }
+.log-slide-enter-active { animation: log-fade-in 0.25s ease both; }
+.log-slide-leave-active { animation: log-fade-out 0.2s ease both; position: absolute; }
+.log-slide-move { transition: transform 0.3s ease; }
+@keyframes log-fade-in  { 0%{opacity:0;transform:scale(0.95) translateY(6px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
+@keyframes log-fade-out { 0%{opacity:1;transform:scale(1)}                    100%{opacity:0;transform:scale(0.95)} }
 
+/* ── Fingerprint animation ── */
 .fp-anim-svg { width: 56px; height: 56px; }
 .fp-arc { stroke-dasharray: 60; stroke-dashoffset: 60; animation: fp-draw 2.4s ease forwards infinite; }
 .fp-arc-1 { stroke-dasharray: 80; stroke-dashoffset: 80; animation-delay: 0s; }
@@ -891,14 +1125,16 @@ onUnmounted(() => {
   100% { stroke-dashoffset: 0; opacity: 0; }
 }
 
+/* ── Dark toggle ── */
 .dark-toggle { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
 .dark-toggle:hover { background: rgba(255,255,255,0.18); color: #fff; }
 .dark-toggle svg { width: 15px; height: 15px; }
 
+/* ── Dark mode ── */
 .kiosk-shell.dark { background: #13151a; }
 .kiosk-shell.dark .kiosk-main { background: #13151a; }
 .kiosk-shell.dark .kiosk-header { background: #1c1f26; border-bottom: 1px solid #2a2d35; }
-.kiosk-shell.dark .logs-card, .kiosk-shell.dark .action-outer, .kiosk-shell.dark .breaks-outer { background: #1c1f26; border-color: #2a2d35; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+.kiosk-shell.dark .action-outer, .kiosk-shell.dark .breaks-outer { background: #1c1f26; border-color: #2a2d35; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
 .kiosk-shell.dark .action-btn { background: #23262f; border-color: #2e323c; }
 .kiosk-shell.dark .action-btn:hover:not(:disabled) { background: #2a2d38; box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
 .kiosk-shell.dark .action-name { color: #e8eaf0; }
@@ -910,34 +1146,131 @@ onUnmounted(() => {
 .kiosk-shell.dark .break-name { color: #e8eaf0; }
 .kiosk-shell.dark .break-btn.break-out .break-icon { background: #2e2510; color: #fbbf24; }
 .kiosk-shell.dark .break-btn.break-in  .break-icon { background: #101828; color: #60a5fa; }
-.kiosk-shell.dark .logs-card-header { border-color: #2a2d35; }
-.kiosk-shell.dark .logs-card-title { color: #9da3b4; }
-.kiosk-shell.dark .logs-count { background: #2e1010; color: #f87171; }
-.kiosk-shell.dark .logs-filters { border-color: #2a2d35; }
-.kiosk-shell.dark .logs-search { background: #23262f; border-color: #2e323c; color: #e8eaf0; }
-.kiosk-shell.dark .logs-search::placeholder { color: #464b5a; }
-.kiosk-shell.dark .logs-search:focus { border-color: #8C1007; }
-.kiosk-shell.dark .logs-filter-select { background-color: #23262f; border-color: #2e323c; color: #e8eaf0; }
-.kiosk-shell.dark .logs-filter-select:focus { border-color: #8C1007; }
+.kiosk-shell.dark .select-label { color: #565b6b; }
+.kiosk-shell.dark .logs-bottom { background: #1c1f26; border-color: #2a2d35; }
+.kiosk-shell.dark .logs-bottom-header { border-color: #2a2d35; }
+.kiosk-shell.dark .log-entry { border-color: #2a2d35; }
 .kiosk-shell.dark .log-entry:hover { background: #23262f; }
 .kiosk-shell.dark .log-name { color: #e8eaf0; }
 .kiosk-shell.dark .log-meta { color: #565b6b; }
 .kiosk-shell.dark .log-time { color: #464b5a; }
 .kiosk-shell.dark .log-avatar { background: #5c1515; }
-.kiosk-shell.dark .logs-empty { color: #464b5a; }
-.kiosk-shell.dark .logs-pagination { border-color: #2a2d35; }
-.kiosk-shell.dark .page-btn { background: #23262f; border-color: #2e323c; }
-.kiosk-shell.dark .page-btn:hover:not(:disabled) { background: #2e1010; border-color: #8C1007; }
-.kiosk-shell.dark .page-btn svg { color: #9da3b4; }
-.kiosk-shell.dark .page-info { color: #565b6b; }
-.kiosk-shell.dark .step-label { color: #e8eaf0; }
+.kiosk-shell.dark .logs-bottom-pagination { border-color: #2a2d35; }
+.kiosk-shell.dark .logs-filter-select { background-color: #23262f; border-color: #2e323c; color: #e8eaf0; }
+.kiosk-shell.dark .logs-search { background: #23262f; border-color: #2e323c; color: #e8eaf0; }
+.kiosk-shell.dark .logs-card-title { color: #9da3b4; }
+.kiosk-shell.dark .logs-count { background: #2e1010; color: #f87171; }
 .kiosk-shell.dark .breaks-section-label { color: #565b6b; }
-.kiosk-shell.dark .breaks-divider::before, .kiosk-shell.dark .breaks-divider::after { background: #2a2d35; }
-.kiosk-shell.dark .breaks-divider span { color: #464b5a; }
-.kiosk-shell.dark .terminal { border-color: #2a2d35; }
+.kiosk-shell.dark .breaks-row-divider::before, .kiosk-shell.dark .breaks-row-divider::after { background: #2a2d35; }
+.kiosk-shell.dark .breaks-row-divider span { color: #464b5a; }
 .kiosk-shell.dark .kiosk-footer { background: #13151a; border-color: #2a2d35; }
 .kiosk-shell.dark .kiosk-footer-left, .kiosk-shell.dark .kiosk-footer-right { color: #464b5a; }
 .kiosk-shell.dark .kiosk-footer-right strong { color: #6b7280; }
 .kiosk-shell.dark .footer-fp-icon { color: #464b5a; }
 .kiosk-shell.dark .footer-link { color: #c0392b; }
+.kiosk-shell.dark .page-btn { background: #23262f; border-color: #2e323c; }
+.kiosk-shell.dark .page-btn:hover:not(:disabled) { background: #2e1010; border-color: #8C1007; }
+.kiosk-shell.dark .page-btn svg { color: #9da3b4; }
+.kiosk-shell.dark .page-info { color: #565b6b; }
+
+/* ── My Logs Panel ── */
+.mylogs-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; display: flex; flex-direction: column; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: visible; position: relative; flex: 1; min-height: 0; }
+.mylogs-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
+.mylogs-title { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.5px; }
+.mylogs-title svg { width: 14px; height: 14px; color: #8C1007; }
+.mylogs-search-wrap { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.mylogs-search-input-wrap { position: relative; }
+.mylogs-search-input-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; color: #9ca3af; }
+.mylogs-search { width: 100%; background: #f9fafb; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px 8px 30px; font-size: 12px; font-family: inherit; color: #1a1a1a; outline: none; }
+.mylogs-search:focus { border-color: #8C1007; background: #fff; }
+.mylogs-suggestions { display: flex; flex-direction: column; gap: 2px; }
+.mylogs-suggestion { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; border: 1px solid #f1f5f9; cursor: pointer; transition: all 0.15s; }
+.mylogs-suggestion:hover { background: #fde8e9; border-color: #e8d0d2; }
+.suggestion-avatar { width: 30px; height: 30px; border-radius: 50%; background: #3E0703; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.suggestion-name { font-size: 12px; font-weight: 600; color: #1a1a1a; }
+.suggestion-meta { font-size: 10px; color: #6b7280; font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
+.mylogs-hint { font-size: 11px; color: #9ca3af; text-align: center; padding: 20px 10px; }
+.mylogs-emp-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
+.mylogs-emp-avatar { width: 36px; height: 36px; border-radius: 50%; background: #8C1007; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; flex-shrink: 0; }
+.mylogs-emp-info { flex: 1; min-width: 0; }
+.mylogs-emp-name { font-size: 13px; font-weight: 700; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mylogs-emp-meta { font-size: 10px; color: #6b7280; margin-top: 1px; }
+.mylogs-clear-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; color: #9ca3af; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
+.mylogs-clear-btn:hover { border-color: #dc2626; background: #fee2e2; color: #dc2626; }
+.mylogs-clear-btn svg { width: 12px; height: 12px; }
+.mylogs-summary { display: flex; align-items: center; justify-content: space-around; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; background: #fafafa; flex-shrink: 0; }
+.mylogs-stat { text-align: center; }
+.mylogs-stat-num { font-size: 18px; font-weight: 800; color: #1a1a1a; line-height: 1; }
+.mylogs-stat-num.green  { color: #16a34a; }
+.mylogs-stat-num.yellow { color: #ca8a04; }
+.mylogs-stat-num.red    { color: #dc2626; }
+.mylogs-stat-label { font-size: 9px; color: #64748b; margin-top: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.mylogs-stat-div { width: 1px; height: 24px; background: #e2e8f0; }
+.mylogs-filters { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.mylogs-filter-row { display: flex; align-items: center; gap: 6px; }
+.mylogs-date-input { flex: 1; background: #f9fafb; border: 1px solid #e2e8f0; border-radius: 7px; padding: 5px 7px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #1a1a1a; outline: none; min-width: 0; }
+.mylogs-date-input:focus { border-color: #8C1007; }
+.mylogs-date-sep { font-size: 11px; color: #9ca3af; font-weight: 600; flex-shrink: 0; }
+.mylogs-select { flex: 1; background: #f9fafb; border: 1px solid #e2e8f0; border-radius: 7px; padding: 5px 24px 5px 7px; font-size: 11px; font-family: inherit; color: #1a1a1a; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 6px center; background-size: 11px; background-color: #f9fafb; }
+.mylogs-select:focus { border-color: #8C1007; }
+.mylogs-clear-filter { padding: 5px 10px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 7px; color: #dc2626; font-size: 10px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.mylogs-clear-filter:hover { background: #fecaca; }
+.mylogs-list { overflow-y: auto; padding: 6px 0; flex: 1; min-height: 0; max-height: 240px; }
+.mylogs-loading { text-align: center; color: #9ca3af; font-size: 12px; padding: 32px 0; }
+.mylogs-empty { text-align: center; color: #9ca3af; font-size: 11px; padding: 32px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.mylogs-empty svg { width: 28px; height: 28px; color: #d1d5db; }
+.mylogs-entry { padding: 10px 14px; border-bottom: 1px solid #f9fafb; transition: background 0.15s; }
+.mylogs-entry:hover { background: #fdf5f5; }
+.mylogs-entry:last-child { border-bottom: none; }
+.mylogs-entry-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+.mylogs-date { font-size: 11px; font-weight: 600; color: #374151; }
+.mylogs-status-pill { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+.mylogs-status-pill.present { background: #dcfce7; color: #16a34a; }
+.mylogs-status-pill.late    { background: #fef9c3; color: #ca8a04; }
+.mylogs-status-pill.absent  { background: #fee2e2; color: #dc2626; }
+.mylogs-times { display: flex; gap: 6px; flex-wrap: wrap; }
+.mylogs-breaks { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.mlt { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+.mlt.in  { background: #dcfce7; color: #16a34a; }
+.mlt.out { background: #fee2e2; color: #dc2626; }
+.mlt-break { font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #fef9c3; color: #ca8a04; }
+.mylogs-pagination { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 14px; border-top: 1px solid #f1f5f9; }
+
+/* dark my logs */
+.kiosk-shell.dark .mylogs-card { background: #1e2128; border-color: #2e323c; border-radius: 16px; }
+.kiosk-shell.dark .mylogs-header { border-color: #2e323c; }
+.kiosk-shell.dark .mylogs-title { color: #d1d5db; }
+.kiosk-shell.dark .mylogs-search { background: #23262f; border-color: #2e323c; color: #e5e7eb; }
+.kiosk-shell.dark .mylogs-search:focus { background: #1e2128; }
+.kiosk-shell.dark .mylogs-suggestion { border-color: #2e323c; background: #23262f; }
+.kiosk-shell.dark .mylogs-suggestion:hover { background: #3E0703; border-color: #6D2932; }
+.kiosk-shell.dark .suggestion-name { color: #e5e7eb; }
+.kiosk-shell.dark .mylogs-emp-header { border-color: #2e323c; }
+.kiosk-shell.dark .mylogs-emp-name { color: #e5e7eb; }
+.kiosk-shell.dark .mylogs-clear-btn { background: #23262f; border-color: #2e323c; }
+.kiosk-shell.dark .mylogs-summary { background: #23262f; border-color: #2e323c; }
+.kiosk-shell.dark .mylogs-stat-num { color: #e5e7eb; }
+.kiosk-shell.dark .mylogs-stat-div { background: #2e323c; }
+.kiosk-shell.dark .mylogs-filters { border-color: #2e323c; }
+.kiosk-shell.dark .mylogs-date-input { background: #23262f; border-color: #2e323c; color: #e5e7eb; }
+.kiosk-shell.dark .mylogs-select { background-color: #23262f; border-color: #2e323c; color: #e5e7eb; }
+.kiosk-shell.dark .mylogs-entry { border-color: #23262f; }
+.kiosk-shell.dark .mylogs-entry:hover { background: rgba(140,16,7,0.08); }
+.kiosk-shell.dark .mylogs-date { color: #d1d5db; }
+/* ── Simplified My Logs ── */
+.mylogs-stats-row { display: flex; gap: 4px; padding: 10px 12px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
+.ml-stat-pill { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px; border-radius: 8px; font-size: 15px; font-weight: 800; line-height: 1; }
+.ml-stat-pill span { font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; }
+.ml-stat-pill.total   { background: #f3f4f6; color: #374151; }
+.ml-stat-pill.present { background: #dcfce7; color: #16a34a; }
+.ml-stat-pill.late    { background: #fef9c3; color: #ca8a04; }
+.ml-stat-pill.absent  { background: #fee2e2; color: #dc2626; }
+.mylogs-simple-filter { display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
+.mylogs-simple-filter .mylogs-select { flex: 1; }
+.mylogs-simple-filter .mylogs-clear-filter { padding: 4px 8px; font-size: 11px; }
+.kiosk-shell.dark .ml-stat-pill.total   { background: #23262f; color: #9da3b4; }
+.kiosk-shell.dark .ml-stat-pill.present { background: #0f2e1a; color: #4ade80; }
+.kiosk-shell.dark .ml-stat-pill.late    { background: #2e2510; color: #fbbf24; }
+.kiosk-shell.dark .ml-stat-pill.absent  { background: #2e1010; color: #f87171; }
+.kiosk-shell.dark .mylogs-simple-filter { border-color: #2e323c; }
 </style>
