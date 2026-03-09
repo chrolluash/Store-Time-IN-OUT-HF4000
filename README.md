@@ -404,8 +404,6 @@ These are hardcoded constants in both `EmployeeController` and `LogController`. 
 
 **Positions:** Store Head, Store Manager, Cashier, Sales Personnel
 
-**Branches:** SM MOA, SM Megamall, SM North EDSA, Glorietta, Robinsons Manila, SM Grand Central, SM Fairview, SM Southmall, ATC, Festival Mall, Ali Mall
-
 ---
 
 ## Potential Improvements
